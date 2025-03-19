@@ -1,0 +1,59 @@
+<section class="text-center py-8">
+    <h2 class="text-2xl font-semibold">Doctor Dashboard</h2>
+    <ul id="appointmentsList" class="space-y-3"></ul>
+</section>
+
+<script>
+    function loadAppointments() {
+        db.collection("appointments").where("status", "==", "Pending").onSnapshot(snapshot => {
+            const list = document.getElementById("appointmentsList");
+            list.innerHTML = "";
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                const item = document.createElement("li");
+                item.innerHTML = `
+                    <div class="border p-4 rounded shadow">
+                        <p><strong>Name:</strong> ${data.userName}</p>
+                        <p><strong>Email:</strong> ${data.userEmail}</p>
+                        <p><strong>Date:</strong> ${data.appointmentTime}</p>
+                        <button onclick="approveAppointment('${doc.id}', '${data.userEmail}')" class="bg-green-500 text-white px-3 py-1 rounded mt-2">Approve</button>
+                        <button onclick="rejectAppointment('${doc.id}', '${data.userEmail}')" class="bg-red-500 text-white px-3 py-1 rounded mt-2">Reject</button>
+                    </div>
+                `;
+                list.appendChild(item);
+            });
+        });
+    }
+
+    function approveAppointment(id, userEmail) {
+        const meetLink = prompt("Enter Google Meet Link:");
+        if (!meetLink) return;
+
+        db.collection("appointments").doc(id).update({
+            status: "Accepted",
+            meetLink: meetLink
+        }).then(() => {
+            sendEmail(userEmail, meetLink);
+            alert("Appointment Approved & Email Sent!");
+        });
+    }
+
+    function rejectAppointment(id, userEmail) {
+        db.collection("appointments").doc(id).update({
+            status: "Rejected"
+        }).then(() => {
+            sendEmail(userEmail, "");
+            alert("Appointment Rejected & Email Sent!");
+        });
+    }
+
+    function sendEmail(userEmail, meetLink) {
+        fetch("https://YOUR_CLOUD_FUNCTION_URL", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email: userEmail, meetLink: meetLink })
+        });
+    }
+
+    loadAppointments();
+</script>
