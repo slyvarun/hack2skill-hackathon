@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HealthConnect - AI Telehealth</title>
+    <link href="index.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+</head>
+
+<div class="video-container">
+    <video autoplay loop muted playsinline>
+        <source src="/assets/TeleCure.mp4" type="video/mp4">
+        Your browser does not support the video tag.
+    </video>
+</div>
+<style>
+    .video-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: -1;
+        }
+        
+        .video-container video {
+            width: 100%;
+            height: 100%;
+            object-fit:contain;
+        }
+</style>
+
+
+
+<body>
+
+    <!-- Navbar -->
+    <nav class="head">
+        <img class="head-img" src="/assets/TeleCure.png">
+        <a href="#" class="head-content">TeleCure</a>
+    </nav>
+
+    <!-- Hero Section -->
+    <header class="main">
+        <h1 class="main-content">AI-Powered Telehealth & Awareness</h1>
+        <p class="main-content">Get medical advice, consultations, and health tips online.</p>
+    </header>
+
+
+
+<section class="container">
+    <h2>Upload Your Vitals</h2>
+    <p>Enter your health parameters to get an AI-based diagnosis</p>
+
+    <form id="vitalsForm">
+        <div class="input-group">
+            <label>Heart Rate (bpm)</label>
+            <input type="number" id="heartRate" placeholder="Enter Heart Rate" required>
+        </div>
+
+        <div class="input-group">
+            <label>Blood Pressure (mmHg)</label>
+            <input type="number" id="bloodPressure" placeholder="Enter Blood Pressure" required>
+        </div>
+
+        <div class="input-group">
+            <label>Oxygen Saturation (%)</label>
+            <input type="number" id="oxygen" placeholder="Enter Oxygen Level" required>
+        </div>
+
+        <div class="input-group">
+            <label>Upload Hospital Report (Optional)</label>
+            <input type="file" id="reportUpload">
+        </div>
+
+        <button type="submit" class="btn">Predict Diagnosis</button>
+    </form>
+
+    <p id="predictionResult" class="result-text"></p>
+
+    <button id="requestConsult" class="btn hidden">Request Doctor Consultation</button>
+</section>
+
+<script>
+    document.getElementById("vitalsForm").addEventListener("submit", function(event) {
+        event.preventDefault();
+
+        const vitals = {
+            heartRate: document.getElementById("heartRate").value,
+            bloodPressure: document.getElementById("bloodPressure").value,
+            oxygen: document.getElementById("oxygen").value
+        };
+
+        fetch("https://your-ai-api.com/predict", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(vitals)
+        })
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById("predictionResult").innerText = "Diagnosis: " + data.prediction;
+            document.getElementById("requestConsult").classList.remove("hidden");
+        })
+        .catch(error => console.error("Error:", error));
+    });
+
+    document.getElementById("requestConsult").addEventListener("click", function() {
+        alert("Appointment request sent! You will receive a confirmation once the doctor approves.");
+        // Backend request for doctor approval
+    });
+</script>
+
+
+    <!-- Consultation Section -->
+    <section class="text-center py-8">
+        <h2 class="text-2xl font-semibold">Consult a Doctor</h2>
+        <button onclick="requestAppointment()" class="mt-4 bg-blue-600 text-white px-6 py-2 rounded-md">
+            Request Appointment
+        </button>
+        <p id="message" class="mt-3 text-green-600"></p>
+    </section>
+    
+    <script>
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_AUTH_DOMAIN",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_STORAGE_BUCKET",
+            messagingSenderId: "YOUR_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+    
+        function requestAppointment() {
+            const userName = prompt("Enter your name:");
+            const userEmail = prompt("Enter your email:");
+            const appointmentTime = prompt("Enter preferred date & time (YYYY-MM-DD HH:MM)");
+    
+            if (!userName || !userEmail || !appointmentTime) {
+                alert("Please provide all details!");
+                return;
+            }
+    
+            db.collection("appointments").add({
+                userName: userName,
+                userEmail: userEmail,
+                appointmentTime: appointmentTime,
+                status: "Pending",
+                meetLink: ""
+            }).then(() => {
+                document.getElementById("message").innerText = "Appointment Requested. You'll receive an email once approved.";
+            }).catch(error => console.error("Error:", error));
+        }
+    </script>
+    
+
+    <!-- Health Tips Chatbot -->
+    <section class="text-center py-8">
+        <h2 class="text-2xl font-semibold">Health Tips Chatbot</h2>
+        <iframe allow="microphone;" width="350" height="430" class="mx-auto mt-4" src="https://console.dialogflow.com/api-client/demo/embedded/19016d88-7705-4c83-ac21-a75030d17310">
+        </iframe>
+    </section>
+
+    <!-- OpenStreetMap: Find Nearby Hospitals -->
+    <section class="text-center py-8">
+        <h2 class="text-2xl font-semibold">Find Nearby Hospitals in Hyderabad</h2>
+        <div id="map" class="map"></div>
+    </section>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+
+    <!-- Leaflet.js (Free OpenStreetMap) -->
+    <script>
+        var map = L.map('map').setView([17.3850, 78.4867], 12); // Hyderabad coordinates
+    
+        // Load Free OpenStreetMap tiles
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+    
+        // Example hospitals in Hyderabad
+        var hospitals = [
+            { name: "Apollo Hospitals, Hyderabad", lat: 17.4140, lng: 78.4489 },
+            { name: "Care Hospitals, Hyderabad", lat: 17.4265, lng: 78.4526 },
+            { name: "Yashoda Hospital, Hyderabad", lat: 17.4336, lng: 78.4637 }
+        ];
+    
+        hospitals.forEach(function(hospital) {
+            L.marker([hospital.lat, hospital.lng]).addTo(map)
+                .bindPopup(hospital.name);
+        });
+    </script>
+    
+
+
+ <!-- Footer -->
+ <footer class="bg-blue-600 text-white text-center p-4 mt-8">
+    <p>&copy; 2025 HealthConnect. All rights reserved.</p>
+</footer>
+
+
+
+</body>
+</html>
