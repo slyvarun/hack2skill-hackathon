@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>{{ app_name }} — Disease Predictor</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  /* Minimal reset */
+  *{box-sizing:border-box;margin:0;padding:0}
+  body,html{height:100%;font-family:Inter,Arial,Helvetica,sans-serif;color:#fff}
+ 
+
+  header{display:flex;align-items:center;gap:18px;padding:20px 40px;background:transparent}
+  .logo{height:56px;display:block;border-radius: 20px;}
+  .brand {font-size:22px;color:#ffffff;font-weight:700;letter-spacing:.6px}
+
+  /* Container */
+  .wrap{max-width:1200px;margin:28px auto;padding:20px;display:flex;gap:24px;align-items:flex-start}
+  /* Left: form */
+  .left{flex:1 1 58%;background:rgba(255,255,255,0.06);padding:28px;border-radius:14px;backdrop-filter:blur(6px)}
+  .left h2{color:#ffffff;margin-bottom:12px}
+  .category{margin-bottom:12px}
+  .category label{display:block;margin-bottom:8px;font-weight:600;color:#e6e6e6}
+  select{width:100%;padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,0.08);background:#0f1724;color:#fff}
+
+  button.primary{margin-top:14px;padding:12px 18px;border-radius:10px;border:none;background:#389c19;color:#111;font-weight:700;cursor:pointer}
+  button.primary:hover{transform:translateY(-2px);box-shadow:0 10px 30px rgba(0,0,0,0.4)}
+
+  /* Right: result */
+  .right{flex:1 1 38%;background:rgba(33, 199, 55, 0.085);color:#ffffff;padding:26px;border-radius:14px;display:flex;flex-direction:column;justify-content:flex-start;align-items:stretch;min-height:320px}
+  .right h3{margin-bottom:12px}
+  .prediction-card{background:linear-gradient(180deg,#fff,#f7f7f7);padding:18px;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,0.08);margin-bottom:12px}
+  .prediction-card .disease{color:#c0392b;font-weight:800;font-size:20px;margin-bottom:8px}
+  .tip{font-style:italic;color:#ffffff}
+
+  .help{margin-top:12px;color:#444;font-size:13px}
+  .error{margin-top:10px;color:#ff3b30;font-weight:700}
+
+  footer{position:fixed;left:0;right:0;bottom:0;padding:10px 20px;text-align:center;color:#fff;background:linear-gradient(180deg,transparent,rgba(0,0,0,.6))}
+  @media(max-width:980px){
+    .wrap{flex-direction:column;padding:14px}
+    .left,.right{flex:unset}
+    header{padding:14px}
+  }
+   /* Mobile adjustments */
+  @media(max-width:768px){
+    .wrap{flex-direction:column;padding:12px;gap:12px}
+    header{flex-direction:column;align-items:flex-start;padding:12px;gap:6px}
+    .logo{height:40px}
+    .brand{font-size:18px}
+    .left h2{font-size:16px}
+    .category label{font-size:13px}
+    select, button.primary{font-size:13px;padding:8px}
+    .right h3{font-size:15px}
+    .prediction-card .disease{font-size:16px}
+    .tip{font-size:13px}
+  }
+  @media(max-width:480px){
+    header{align-items:center;text-align:center}
+    .wrap{padding:8px;gap:8px}
+    .left, .right{padding:16px}
+    .brand{font-size:16px}
+    .left h2{font-size:15px}
+    .category label{font-size:12px}
+    select, button.primary{font-size:12px;padding:6px}
+    .right h3{font-size:14px}
+    .prediction-card .disease{font-size:15px}
+    .tip{font-size:12px}
+    footer{font-size:11px}
+  }
+</style>
+</head>
+<body>
+
+
+<div class="overlay"></div>
+
+<header>
+  <img class="logo" src="/static/TeleCure.png" alt="Logo">
+  <div class="brand">{{ app_name }}</div>
+</header>
+
+<div class="wrap">
+  <div class="left">
+    <h2>Select Symptoms</h2>
+    <form method="post">
+      {% for category, feats in categorized_symptoms.items() %}
+        <div class="category">
+          <label>{{ category }}</label>
+          <select name="{{ category }}">
+            <option value="">-- Select {{ category }} symptom --</option>
+            {% for value, label in feats %}
+              <option value="{{ value }}">{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      {% endfor %}
+      <button class="primary" type="submit">Predict</button>
+    </form>
+    {% if error_message %}
+      <div class="error">{{ error_message }}</div>
+    {% endif %}
+  </div>
+
+  <div class="right">
+    <h3>Prediction &amp; Advice</h3>
+    {% if prediction %}
+      <div class="prediction-card">
+        <div class="disease">Predicted: {{ prediction }}</div>
+        <div class="help">This is a machine-learning based suggestion. For medical advice, consult a professional.</div>
+      </div>
+      <div class="tip">Tip: {{ tip }}</div>
+    {% else %}
+      <div class="prediction-card">
+        <div class="help">Select symptoms from the left and click <strong>Predict</strong>. Prediction will appear here.</div>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+<footer>&copy; {{ (2025) }} {{ app_name }} — Built for health awareness</footer>
+
+<video autoplay muted loop id="bg-video">
+  <source src="{{ url_for('static', filename='TeleCure.mp4') }}" type="video/mp4">
+</video>
+
+<style>
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: Arial, sans-serif;
+}
+
+#bg-video {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  width: auto;
+  height: auto;
+  min-width: 100%;
+  min-height: 100%;
+  transform: translate(-50%, -50%);
+  object-fit: cover; /* fills container, cropping if needed */
+  z-index: -1;
+}
+
+.overlay {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.45); /* semi-transparent overlay for readability */
+  z-index: 0;
+}
+
+.content {
+  position: relative;
+  z-index: 1; /* everything above video & overlay */
+}
+</style>
+
+</body>
+</html>
